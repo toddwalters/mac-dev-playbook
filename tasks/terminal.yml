@@ -1,29 +1,38 @@
----
-# Custom Terminal theme.
-- name: Get current Terminal profile.
-  command: defaults read com.apple.terminal 'Default Window Settings'
-  register: terminal_theme
-  changed_when: false
-  failed_when: false
-  check_mode: false
+# Install custom shell alias and function scripts                                                                                                                               
+- name: Ensure ~/.local directory exists                                                                                                                                        
+  ansible.builtin.file:                                                                                                                                                         
+    path: "~/.local/include"                                                                                                                                                    
+    state: directory                                                                                                                                                            
+    mode: "0755"                                                                                                                                                                
 
-- name: Ensure custom Terminal profile is added.
-  copy:
-    src: files/terminal/JJG-Term.terminal
-    dest: /tmp/JJG-Term.terminal
-  changed_when: false
-  when: "'JJG-Term' not in terminal_theme.stdout"
+- name: Create symlinks for files in .dotfiles/.local to ~/.local/include                                                                                                       
+  ansible.builtin.find:                                                                                                                                                         
+    paths: "{{ dotfiles_repo_local_destination }}/.local"                                                                                                                       
+    recurse: yes                                                                                                                                                                
+  register: local_files                                                                                                                                                         
 
-- name: Ensure custom Terminal profile is added.
-  command: open /tmp/JJG-Term.terminal
-  changed_when: false
-  when: "'JJG-Term' not in terminal_theme.stdout"
+- name: Symlink files from .dotfiles/.local to ~/.local/include                                                                                                                 
+  ansible.builtin.file:                                                                                                                                                         
+    src: "{{ item.path }}"                                                                                                                                                      
+    dest: "~/.local/include/{{ item.path | basename }}"                                                                                                                         
+    state: link                                                                                                                                                                 
+  loop: "{{ local_files.files }}"
 
-# TODO: This doesn't work in Yosemite. Consider a different solution?
-- name: Ensure custom Terminal profile is set as default.
-  command: "{{ item }}"
-  with_items:
-    - defaults write com.apple.terminal 'Default Window Settings' -string JJG-Term
-    - defaults write com.apple.terminal 'Startup Window Settings' -string JJG-Term
-  changed_when: false
-  when: "'JJG-Term' not in terminal_theme.stdout"
+- name: Ensure ~/.config directory exists
+  ansible.builtin.file:
+    path: "~/.config"
+    state: directory
+    mode: "0755"
+
+- name: Create symlinks for files in .dotfiles/.config to ~/.config
+  ansible.builtin.find:
+    paths: "{{ dotfiles_repo_local_destination }}/.config"
+    recurse: yes
+  register: config_files
+
+- name: Symlink files from .dotfiles/.config to ~/.config
+  ansible.builtin.file:
+    src: "{{ item.path }}"
+    dest: "~/.config/{{ item.path | basename }}"
+    state: link
+  loop: "{{ config_files.files }}"
