@@ -31,6 +31,14 @@
       when: configure_sudoers
       tags: ['sudoers']
 
+    - name: Make sure homebrew bin is in path
+      ansible.builtin.lineinfile:
+        path: /etc/paths
+        state: present
+        line: '/opt/homebrew/bin'
+      become: true
+      become_user: root
+
     - import_tasks: tasks/terminal.yml
       when: configure_terminal
       tags: ['terminal']
