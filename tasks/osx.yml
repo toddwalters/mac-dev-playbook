@@ -1,5 +1,11 @@
 ---
 # TODO: Use sudo once .osx can be run via root with no user interaction.
+- name: Ensure ~/Pictures/Screenshots directory exists                                                                                                                                        
+  ansible.builtin.file:                                                                                                                                                         
+    path: "~/Pictures/Screenshots"                                                                                                                                                    
+    state: directory                                                                                                                                                            
+    mode: "0755"   
+
 - name: Run .osx dotfiles.
   command: "{{ osx_script }}"
   changed_when: false
